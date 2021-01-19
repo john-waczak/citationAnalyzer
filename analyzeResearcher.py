@@ -1,7 +1,11 @@
+import matplotlib.pyplot as plt
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import json  # for saving data
 from bs4 import BeautifulSoup
+
+
 
 driver = webdriver.Chrome("./drivers/chromedriver")
 pathToDrLary = "https://scholar.google.com/citations?user=gqR4v14AAAAJ"
@@ -23,7 +27,7 @@ try:
 
 except Exception as e:
     print(e)
-
+    author_summary["name"] = ""
 
 # total_citation_xpath ="/html/body/div/div[13]/div[2]/div/div[1]/div[1]/table/tbody/tr[1]/td[2]"
 total_citation_xpath ='//*[@id="gsc_rsb_st"]/tbody/tr[1]/td[2]'
@@ -43,6 +47,7 @@ try:
     print("h-index: {0}".format(hindex))
     author_summary["hindex"] = hindex
 except Exception as e:
+    author_summary["hindex"] = ''
     print(e)
 
 i10_xpath = '//*[@id="gsc_rsb_st"]/tbody/tr[3]/td[2]'
@@ -53,6 +58,7 @@ try:
     author_summary["i10 index"] = i10_index
 except Exception as e:
     print(e)
+    author_summary["i10 index"] = ''
 
 # get historical ciation histogram data:
 hist_button_id='gsc_hist_opn'
@@ -65,7 +71,7 @@ try:
     hist_body_id = 'gsc_md_hist-bdy'
     hist_body = driver.find_element_by_id(hist_body_id)
     years = hist_body.find_element_by_xpath(".//div/div[3]/div")
-    years_soup = BeautifulSoup(years.get_attribute("innerHTML"))
+    years_soup = BeautifulSoup(years.get_attribute("innerHTML"), features="html.parser")
 
     citation_years =  [int(year.text) for year in years_soup.find_all('span', {"class": "gsc_g_t"})]
     citation_nums =  [int(num.text) for num in years_soup.find_all('span', {"class": "gsc_g_al"})]
@@ -73,6 +79,25 @@ try:
     author_summary["citation years"] = citation_years
     author_summary["citation numbers"] = citation_nums
 
+    plt.figure()
+    plt.bar(citation_years, citation_nums, align='center', color='indigo', alpha=0.5)
+    plt.xlabel('Year')
+    plt.title("{0} Citations Per Year".format(author_summary["name"]))
+    plt.savefig("./figures/citations_per_year.eps")
 
 except Exception as e:
     print(e)
+    author_summary["citation years"] = []
+    author_summary["citation numbers"] = []
+
+
+
+
+# Save summary dictionary to JSON file
+with open('./json/summary_data.json', 'w') as fp:
+    json.dump(author_summary, fp)
+
+
+
+# Close the browser
+driver.quit()
