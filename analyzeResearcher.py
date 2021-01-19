@@ -4,11 +4,27 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import json  # for saving data
 from bs4 import BeautifulSoup
-
-
+from selenium.common.exceptions import NoSuchElementException
+import time
 
 driver = webdriver.Chrome("./drivers/chromedriver")
 pathToDrLary = "https://scholar.google.com/citations?user=gqR4v14AAAAJ"
+
+
+def check_exists_by_xpath(xpath):
+    try:
+        driver.find_element_by_xpath(xpath)
+    except NoSuchElementException:
+        return False
+    return True
+def check_exists_by_id(id):
+    try:
+        driver.find_element_by_id(id)
+    except NoSuchElementException:
+        return False
+    return True
+
+
 
 
 
@@ -80,10 +96,15 @@ try:
     author_summary["citation numbers"] = citation_nums
 
     plt.figure()
-    plt.bar(citation_years, citation_nums, align='center', color='indigo', alpha=0.5)
+    plt.bar(citation_years, citation_nums, align='center', color='indigo')
     plt.xlabel('Year')
     plt.title("{0} Citations Per Year".format(author_summary["name"]))
     plt.savefig("./figures/citations_per_year.eps")
+
+    # close histogram
+    exit_xpath = '//*[@id="gsc_md_hist-x"]'
+    exit_button = driver.find_element_by_xpath(exit_xpath)
+    exit_button.click()
 
 except Exception as e:
     print(e)
@@ -99,5 +120,26 @@ with open('./json/summary_data.json', 'w') as fp:
 
 
 
+
+# Next we want to autogenerate the bibtex. To do that, let's first make json files for each reference
+# first we find the div that contains the paper list
+more_button_id = "gsc_bpf_more"
+while check_exists_by_id(more_button_id):
+    reference_list_body_id = 'gsc_a_b'
+    reference_list_body = driver.find_element_by_id(reference_list_body_id)
+    reference_list_body.click()
+    time.sleep(5)
+    print("Exists!")
+
+
+
+
+
+
+
+
+
+
+
 # Close the browser
-driver.quit()
+# driver.quit()
