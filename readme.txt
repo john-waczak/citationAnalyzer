@@ -1,4 +1,2 @@
-This code works using the Selenium Browser to scrape webpages. For the necessary package requirements, see requirements.txt.
+This code scrapes information from Google Scholar by utilizing the python package Selenium. To run the code, make sure you have a copy of Google Chrome on your machine. Then install the necessary requirements via pip using requirements.txt.
 
-Selenium can be installed from the command line via pip.
-To make sure the python package can control the web browser, we need to download the chrome webdriver which can be found here: https://sites.google.com/a/chromium.org/chromedriver/downloads
