@@ -171,7 +171,7 @@ for row in table_rows:
     table_soup = BeautifulSoup(info_table.get_attribute("innerHTML"), features="html.parser")
     divs = table_soup.find_all('div', {"class": "gs_scl"})
 
-    field_list = ['Authors', 'Publication date', 'Journal', 'Volume', 'Issue', 'Pages', 'Publisher', 'Desciption']
+    field_list = ['Authors', 'Publication date', 'Journal', 'Volume', 'Issue', 'Pages', 'Publisher', 'Description']
 
     for div in divs:
         fields = div.find_all('div', {"class": "gsc_vcd_field"})
@@ -185,7 +185,7 @@ for row in table_rows:
 
     # now save the json file
     with open('./json/paper_info/paper{}.json'.format(counter), 'w') as fp:
-        json.dump(author_summary, fp)
+        json.dump(citation_json, fp)
 
     counter += 1
 
