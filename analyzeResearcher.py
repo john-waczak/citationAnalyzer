@@ -118,25 +118,83 @@ except Exception as e:
 with open('./json/summary_data.json', 'w') as fp:
     json.dump(author_summary, fp)
 
-
+# click the body of the references to exit the graph
+# try:
+#     reference_list_body_id = 'gsc_a_b'
+#     reference_list_body = driver.find_element_by_id(reference_list_body_id)
+#     reference_list_body.click()
+# except Exception as e:
+#     print(e)
 
 
 # Next we want to autogenerate the bibtex. To do that, let's first make json files for each reference
 # first we find the div that contains the paper list
 more_button_id = "gsc_bpf_more"
-while check_exists_by_id(more_button_id):
-    reference_list_body_id = 'gsc_a_b'
-    reference_list_body = driver.find_element_by_id(reference_list_body_id)
-    reference_list_body.click()
-    time.sleep(5)
-    print("Exists!")
+hasTableChanged = True
+prev_length = 0
+counter = 0
+while hasTableChanged:
+    more_button = driver.find_element_by_id(more_button_id)
+    more_button.click()
+    print("Clicked the 'more' button")
+    # check to see if the table is longer
+    table_id = 'gsc_a_b'
+    table = driver.find_element_by_id(table_id)
+    table_length = len(table.find_elements_by_tag_name('tr'))
+    if counter > 0:
+        if table_length == prev_length:
+            hasTableChanged = False
+    prev_length = table_length
+    counter += 1
+    time.sleep(0.5)
 
 
+# Go through each publication and generate json with citation info
+table_id = 'gsc_a_b'
+table = driver.find_element_by_id(table_id)
+table_rows = table.find_elements_by_tag_name('tr')
+
+counter = 1
+for row in table_rows:
+    citation_json = {}
+
+    link = row.find_element_by_xpath(".//td[1]/a")
+    title = link.text
+    print("Title: ", title)
+    citation_json['title'] = title
+    link.click()
+    time.sleep(1)
 
 
+    info_table_id = 'gsc_vcd_table'
+    info_table = driver.find_element_by_id(info_table_id)
+    table_soup = BeautifulSoup(info_table.get_attribute("innerHTML"), features="html.parser")
+    divs = table_soup.find_all('div', {"class": "gs_scl"})
+
+    field_list = ['Authors', 'Publication date', 'Journal', 'Volume', 'Issue', 'Pages', 'Publisher', 'Desciption']
+
+    for div in divs:
+        fields = div.find_all('div', {"class": "gsc_vcd_field"})
+        vals = div.find_all('div', {"class": "gsc_vcd_value"})
+        field = fields[0].text
+        val = vals[0].text
+        if field in field_list:
+            print("\t", field)
+            citation_json[field] = val
 
 
+    # now save the json file
+    with open('./json/paper_info/paper{}.json'.format(counter), 'w') as fp:
+        json.dump(author_summary, fp)
 
+    counter += 1
+
+
+    # close the window
+    exit_id = 'gs_md_cita-d-x'
+    exit_button = driver.find_element_by_id(exit_id)
+    exit_button.click()
+    time.sleep(2)
 
 
 
