@@ -161,7 +161,11 @@ for row in table_rows:
     link = row.find_element_by_xpath(".//td[1]/a")
     citation = row.find_element_by_xpath(".//td[2]/a")
     title = link.text
-    citation_num = int(citation.text)
+    citation_num = citation.text
+    if citation_num != '':
+        citation_num = int(citation_num)
+    else:
+        citation_num = 0
 
     print("Title: {0}, num citations: {1}".format(title, citation_num))
     citation_json['title'] = title
