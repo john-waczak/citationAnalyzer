@@ -159,13 +159,17 @@ for row in table_rows:
     citation_json = {}
 
     link = row.find_element_by_xpath(".//td[1]/a")
-    citation = row.find_element_by_xpath(".//td[2]/a")
+
+    citation_num = 0
+    try:
+        citation = row.find_element_by_xpath(".//td[2]/a")
+        if citation.text != "":
+            citation_num = int(citation.text)
+    except Exception as e:
+        print("Couldn't find the citation numbers")
+        print(e)
+
     title = link.text
-    citation_num = citation.text
-    if citation_num != '':
-        citation_num = int(citation_num)
-    else:
-        citation_num = 0
 
     print("Title: {0}, num citations: {1}".format(title, citation_num))
     citation_json['title'] = title
