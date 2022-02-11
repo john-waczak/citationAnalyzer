@@ -149,7 +149,7 @@ while hasTableChanged:
             hasTableChanged = False
     prev_length = table_length
     counter += 1
-    time.sleep(0.5)
+    time.sleep(2.0)
 
 
 
@@ -162,30 +162,29 @@ print("Number of papers= {}".format(len(table_rows)))
 
 
 for i in range(1, len(table_rows)+1):
-    # first we must expand the list
-    more_button_id = "gsc_bpf_more"
-    hasTableChanged = True
-    prev_length = 0
-    counter = 0
-    while hasTableChanged:
-        more_button = driver.find_element_by_id(more_button_id)
-        more_button.click()
-        print("Clicked the 'more' button")
-        # check to see if the table is longer
-        table_id = 'gsc_a_b'
-        table = driver.find_element_by_id(table_id)
-        table_length = len(table.find_elements_by_tag_name('tr'))
-        if counter > 0:
-            if table_length == prev_length:
-                hasTableChanged = False
-        prev_length = table_length
-        counter += 1
-        time.sleep(0.5)
+
+    if i > 20:
+        # first we must expand the list
+        more_button_id = "gsc_bpf_more"
+        hasTableChanged = True
+        prev_length = 0
+        counter = 0
 
 
-
-
-
+        while hasTableChanged:
+            more_button = driver.find_element_by_id(more_button_id)
+            more_button.click()
+            print("Clicked the 'more' button")
+            # check to see if the table is longer
+            table_id = 'gsc_a_b'
+            table = driver.find_element_by_id(table_id)
+            table_length = len(table.find_elements_by_tag_name('tr'))
+            if counter > 0:
+                if table_length == prev_length:
+                    hasTableChanged = False
+            prev_length = table_length
+            counter += 1
+            time.sleep(2.0)
 
     citation_json = {}
 
