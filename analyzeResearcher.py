@@ -6,8 +6,10 @@ import json  # for saving data
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
 import time
+import os
 
-driver = webdriver.Chrome("./drivers/chromedriver")
+
+driver = webdriver.Chrome("./chromedriver")
 pathToDrLary = "https://scholar.google.com/citations?user=gqR4v14AAAAJ"
 
 
@@ -94,11 +96,17 @@ try:
 
     author_summary["citation years"] = citation_years
     author_summary["citation numbers"] = citation_nums
-
+    
     plt.figure()
     plt.bar(citation_years, citation_nums, align='center', color='indigo')
     plt.xlabel('Year')
     plt.title("{0} Citations Per Year".format(author_summary["name"]))
+
+    # check if figures path exists
+    if not os.path.isdir("./figures"):
+        os.mkdir("./figures")
+
+
     plt.savefig("./figures/citations_per_year.eps")
 
     # close histogram
@@ -115,20 +123,15 @@ except Exception as e:
 
 
 # Save summary dictionary to JSON file
+
+if not os.path.isdir("./json"):
+    os.mkdir("./json")
+
 with open('./json/summary_data.json', 'w') as fp:
     json.dump(author_summary, fp)
 
-# click the body of the references to exit the graph
-# try:
-#     reference_list_body_id = 'gsc_a_b'
-#     reference_list_body = driver.find_element_by_id(reference_list_body_id)
-#     reference_list_body.click()
-# except Exception as e:
-#     print(e)
 
-
-# Next we want to autogenerate the bibtex. To do that, let's first make json files for each reference
-# first we find the div that contains the paper list
+# first we must expand the list to get the correct number of elements
 more_button_id = "gsc_bpf_more"
 hasTableChanged = True
 prev_length = 0
@@ -149,20 +152,49 @@ while hasTableChanged:
     time.sleep(0.5)
 
 
+
 # Go through each publication and generate json with citation info
 table_id = 'gsc_a_b'
+
 table = driver.find_element_by_id(table_id)
 table_rows = table.find_elements_by_tag_name('tr')
+print("Number of papers= {}".format(len(table_rows)))
 
-counter = 1
-for row in table_rows:
+
+for i in range(1, len(table_rows)+1):
+    # first we must expand the list
+    more_button_id = "gsc_bpf_more"
+    hasTableChanged = True
+    prev_length = 0
+    counter = 0
+    while hasTableChanged:
+        more_button = driver.find_element_by_id(more_button_id)
+        more_button.click()
+        print("Clicked the 'more' button")
+        # check to see if the table is longer
+        table_id = 'gsc_a_b'
+        table = driver.find_element_by_id(table_id)
+        table_length = len(table.find_elements_by_tag_name('tr'))
+        if counter > 0:
+            if table_length == prev_length:
+                hasTableChanged = False
+        prev_length = table_length
+        counter += 1
+        time.sleep(0.5)
+
+
+
+
+
+
     citation_json = {}
 
-    link = row.find_element_by_xpath(".//td[1]/a")
+    link = driver.find_element_by_xpath('//*[@id="gsc_a_b"]/tr[{0}]/td[1]/a'.format(i))
+    citation = driver.find_element_by_xpath('//*[@id="gsc_a_b"]/tr[{0}]/td[2]/a'.format(i))
+
 
     citation_num = 0
     try:
-        citation = row.find_element_by_xpath(".//td[2]/a")
         if citation.text != "":
             citation_num = int(citation.text)
     except Exception as e:
@@ -178,7 +210,8 @@ for row in table_rows:
     time.sleep(1)
 
 
-    info_table_id = 'gsc_vcd_table'
+    # info_table_id = 'gsc_vcd_table'
+    info_table_id = 'gsc_oci_table'
     info_table = driver.find_element_by_id(info_table_id)
     table_soup = BeautifulSoup(info_table.get_attribute("innerHTML"), features="html.parser")
     divs = table_soup.find_all('div', {"class": "gs_scl"})
@@ -186,8 +219,13 @@ for row in table_rows:
     field_list = ['Authors', 'Publication date', 'Journal', 'Volume', 'Issue', 'Pages', 'Publisher', 'Description']
 
     for div in divs:
-        fields = div.find_all('div', {"class": "gsc_vcd_field"})
-        vals = div.find_all('div', {"class": "gsc_vcd_value"})
+        # fields = div.find_all('div', {"class": "gsc_vcd_field"})
+        # vals = div.find_all('div', {"class": "gsc_vcd_value"})
+
+        fields = div.find_all('div', {"class": "gsc_oci_field"})
+        vals = div.find_all('div', {"class": "gsc_oci_value"})
+
+
         field = fields[0].text
         val = vals[0].text
         if field in field_list:
@@ -196,20 +234,23 @@ for row in table_rows:
 
 
     # now save the json file
-    with open('./json/paper_info/paper{}.json'.format(counter), 'w') as fp:
+    if not os.path.isdir("./json/paper_info"):
+        os.mkdir("./json/paper_info")
+
+    with open('./json/paper_info/paper{}.json'.format(i), 'w') as fp:
         json.dump(citation_json, fp)
 
-    counter += 1
 
 
     # close the window
-    exit_id = 'gs_md_cita-d-x'
+    # exit_id = 'gs_md_cita-d-x'
+    exit_id = 'gs_hdr_bck'
+
     exit_button = driver.find_element_by_id(exit_id)
     exit_button.click()
     time.sleep(2)
 
 
 
-
 # Close the browser
-# driver.quit()
+driver.quit()
