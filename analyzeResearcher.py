@@ -9,7 +9,7 @@ import time
 import os
 
 
-driver = webdriver.Chrome("./driver/chromedriver")
+driver = webdriver.Chrome("./drivers/chromedriver")
 pathToDrLary = "https://scholar.google.com/citations?user=gqR4v14AAAAJ"
 
 
